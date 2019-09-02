@@ -1,3 +1,9 @@
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    displayAlign: "center"
+});
+</script>
+
 Contents
 ========
 
@@ -34,7 +40,7 @@ Contents
 1 Introduction
 ========
 -   Training set:
-    **{****x**<sub>**1**</sub>**,** **.****.****.****,** **x**<sub>**N**</sub>**}**,
+    **{**x<sub>**1**</sub>**,** **.****.****.,** **x**<sub>**N**</sub> **}**,
     to tune the parameters of an adaptive model
 -   Target vector: **t**, the identity of the corresponding training set
     digit.
@@ -86,10 +92,17 @@ variable.
 *(ex.1.1)*
 
 $${{\\partial{E}} \\over {\\partial{w\_i}}} = \\sum^N\_{n=1} \\{y(x\_n,\\mathbf{w})-t\_n\\}x^i\_n=0$$
-$$\\sum^N\_{n=1} y(x\_n,\\mathbf{w})x^i\_n =\\sum^N\_{n=1} t\_nx^i\_n$$
+
+$$
+\sum^N\_{n=1} y(x\_n,\\mathbf{w})x^i\_n =\\sum^N\_{n=1} t\_nx^i\_n
+$$
+
 $$\\sum^N\_{n=1} (\\sum\_{j=0}^{M}w\_jx\_n^j)x^i\_n =\\sum^N\_{n=1} t\_nx^i\_n$$
+
 $$\\sum^N\_{n=1} \\sum\_{j=0}^{M}w\_jx\_n^{(j+i)}=\\sum^N\_{n=1} t\_nx^i\_n$$
+
 $$\\sum^M\_{j=1} \\sum\_{n=0}^{N}x\_n^{(j+i)}w\_j=\\sum^N\_{n=1} t\_nx^i\_n$$
+
 $$\\sum^M\_{j=1} A\_{ij}w\_j=T\_i$$
 
 ∴ the jcoefficients **w** that minimize the error function are given by
