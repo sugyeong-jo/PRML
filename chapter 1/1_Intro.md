@@ -31,7 +31,6 @@ Contents
 -   1.6.1 Relative entropy and mutual information
 
 1. Introduction
-
 ===============
 
 -   Training set:
