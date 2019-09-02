@@ -142,8 +142,8 @@ the solution to above set of linear equations.
 
 <img src="fig7.PNG"> <img src="fig8.PNG">
 
-1.2 Probabililty Theory
 
+1.2 Probabililty Theory
 =======================
 
 <center>
