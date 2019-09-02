@@ -31,6 +31,7 @@ Contents
 -   1.6.1 Relative entropy and mutual information
 
 1. Introduction
+
 ===============
 
 -   Training set:
@@ -142,6 +143,7 @@ the solution to above set of linear equations.
 <img src="fig7.PNG"> <img src="fig8.PNG">
 
 1.2 Probabililty Theory
+
 =======================
 
 <center>
