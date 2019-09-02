@@ -1,0 +1,788 @@
+---
+title: "Untitled"
+author: "sugyeong jo"
+date: '2019 9 2 '
+output: 
+  md_document:
+    variant: markdown_github
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Contents
+
+1.0 Introduction
+
+1.1 Example: Polynomial Curve Fitting
+
+1.2 Probabililty Theory
+
+- 1.2.1 Probability densities
+- 1.2.2 Expectations and covariabces
+- 1.2.3 Bayesian probabilities
+- 1.2.4 The Gaussian distribution
+- 1.2.5 Curve fitting re-visited
+- 1.2.6 Bayesian curve fitting
+
+1.3 Model Selection
+
+1.4 The Curse of Dimensionality
+
+1.5 Decision Theory
+
+- 1.5.1 Minimizaing the misclassification rate
+- 1.5.2 Minimizing the expected loss
+- 1.5.3 The reject option
+- 1.5.4 Inference and decision
+- 1.5.5 Loss functions for regression
+
+1.6 Information Theory
+
+- 1.6.1 Relative entropy and mutual information
+
+\newpage
+# 1. Introduction
+
+- Training set: $\mathbf{\{x_1, ..., x_N\}}$, to tune the parameters of an adaptive model
+- Target vector: $\mathbf{t}$, the identity of the corresponding training set digit.
+- Training phase / Learning phase / Generalization
+- Preprocessing: to transform the original input variables into some new space of variables $\to$ easy to recognition pattern
+    - purpose: (dimensinolality reduction $\to$) (1) feature extraction, (2) to speed up computation  
+- Application 
+    - supervised learning: classification, regression
+    - unsupervised learning: clustering, density estimation
+    - reinforcement learning: finding suitable actions to take in a given situation in order to maximize a reward. 
+
+# 1.1 Example: Polynomial Curve Fitting
+
+**Goal**: to exploit the training set in order to make predictions of the value $\hat{t}$ of the target variable for some new value $\hat{x}$ of the input variable.
+
+\begin{center}
+\includegraphics{fig1.PNG}
+\end{center}
+
+- trying to discover the underlying function $\sin(2\pi)$
+
+\begin{align}
+\tag{1.1}
+y(x,\mathbf{w})=w_0+w_1x+w_2x^2+...+w_Mx^M = \sum_{j=0}^{M}w_jx^j
+\end{align}
+
+- $M$ is order of the polynomial
+- $y(x,\mathbf{w})$is a nonlininear function of $x$ and a linear function of the coefficients $\mathbf{w}$.
+
+
+\newpage
+**Step 1**: choosing the value of $\mathbf{w}$ to minimize error function, $E(\mathbf{w})$.  
+
+- error function
+
+\begin{align}
+\tag{1.2}
+E(\mathbf{w})={{1}\over{2}} \sum_{n=1}^{N}\{y(x_n,\mathbf{w})-t_n\}^2
+\end{align}
+
+\begin{center}
+\includegraphics{fig2.PNG}
+\end{center}
+
+- by the sum of the squareds of the errors between the predictions $y(x_n,\mathbf{w})$ for each data point $x_n$ and the corresponding target value $t_n$
+- 1/2: for convenience
+- result is positive quantity and that would be zero, iff the function $y(x_n,\mathbf{w})$ were to pass exactly through each training data point. 
+
+*(ex.1.1)*
+
+$${{\partial{E}} \over {\partial{w_i}}} = \sum^N_{n=1} \{y(x_n,\mathbf{w})-t_n\}x^i_n=0$$
+$$\sum^N_{n=1} y(x_n,\mathbf{w})x^i_n =\sum^N_{n=1} t_nx^i_n$$
+$$\sum^N_{n=1} (\sum_{j=0}^{M}w_jx_n^j)x^i_n =\sum^N_{n=1} t_nx^i_n$$
+$$\sum^N_{n=1} \sum_{j=0}^{M}w_jx_n^{(j+i)}=\sum^N_{n=1} t_nx^i_n$$
+$$\sum^M_{j=1} \sum_{n=0}^{N}x_n^{(j+i)}w_j=\sum^N_{n=1} t_nx^i_n$$
+$$\sum^M_{j=1} A_{ij}w_j=T_i$$
+
+$\therefore$ the jcoefficients $\mathbf{w}$ that minimize the error function are given by the solution to above set of linear equations.
+
+
+\newpage
+**Step 2**: choosing the order $M$ of polynomial (*model comparison* or *model seleiction*)
+
+- over-fitting: eventhough, when polynomial passes exactly through each data point ($M=9$), error function is 0, $E(\mathbf{w^*})=0$, the fitted curve oscillates widly and gives a very poor representation of the function $\sin(2\pi x)$.
+
+\begin{center}
+\includegraphics{fig3.PNG}
+\end{center}
+
+
+- **root mean squre error, RMS error**
+
+\begin{align}
+\tag{1.3}
+E_{RMS}=\sqrt{2E(\mathbf{w^*})/N}
+\end{align}
+
+- the division by *N*: it could be to compare different sizes of data sets on an equal footing
+- square root: measured on the same scale as the target variable $t$.
+
+\begin{center}
+\includegraphics{fig4.PNG}
+\includegraphics{fig5.PNG}
+\end{center}
+
+- (*over-fitting problem*) larger values of M  $\to$ the more flexible, increasing the coefficients $\mathbf{w^*}$ $\to$ increasingly tuned to the random noise on the target values
+
+\newpage
+- **over come the over-fitting problem**
+    - increaing the size of data set
+    - Bayesian method
+    - (for limit size) Regularization: adding the penalty term to the error function (1.2)
+
+\begin{center}
+\includegraphics{fig6.PNG}
+\end{center}
+
+- **Regularization**
+    
+\begin{align}
+\tag{1.4}
+\tilde{E}(\mathbf{w})={{1}\over{2}} \sum_{n=1}^{N}\{y(x_n,\mathbf{w})-t_n\}^2 + {{\lambda}\over{2}}\parallel\mathbf{w}\parallel^2
+\end{align}
+
+- $\lambda$: reactive importance of the regularization term compared with the sum-of-squres error term.
+    - zero: overfitting $\to$ desired: good for fitting $\to$ too large: poor fit
+- $w_0$: normally omitted from the regularizer ($\because$ it depend on theh choice of orgin for the garget variable)
+- shrinkage method (e.g. ridge regression, weight decay,...)
+
+\begin{center}
+\includegraphics{fig7.PNG}
+\includegraphics{fig8.PNG}
+\end{center}
+
+
+
+\newpage
+# 1.2 Probabililty Theory
+\begin{center}
+\includegraphics{fig9.PNG}
+\end{center}
+- joint probability:
+\begin{align}
+\tag{1.5}
+p(X=x_i, Y=y_i)={{n_{ij}\over{N}}}
+\end{align}
+- sum rule (marginal probability):
+\begin{align}
+\tag{1.7}
+p(X=x_i) = {{c_{i}\over{N}}} = {{\sum_jn_{ij}}\over{N}} = \sum_{j=1}^{L}p(X=x_i, Y=y_j)
+\end{align}
+- condition probability:
+\begin{align}
+\tag{1.8}
+p(Y=y_i|X=x_i) = {n_{ij}\over{c_i}}
+\end{align}
+- product rule:
+\begin{align}
+\tag{1.9}
+p(X=x_i,Y=y_i) = {n_{ij}\over{N}}={{n_{ij}\over{c_{ij}}} \cdot{{c_{ij}\over{N}}}=p(Y=y_i|X=x_i)p(X=x_{ij}})
+\end{align}
+- Bayes' theorem
+\begin{align}
+\tag{1.13}
+p(Y|X) = {{p(X|Y)p(Y)}\over{p(X)}}={{p(X|Y)p(Y)}\over{\sum_Y{p(X|Y)p(Y)}}}
+\end{align}
+
+- independent: $p(X,Y)=p(X)p(Y)$
+
+\begin{center}
+\includegraphics{fig10.PNG}
+\end{center}
+
+
+\newpage
+## 1.2.1 Probability densities
+- **probability density**: If the probability of a real-valued variable $x$ falling in the interval $(x, x+\delta x)$ is given by $p(x)\delta x$for $\delta x \to 0$, then $p(x)$ is probability density.
+\begin{center}
+\includegraphics{fig11.PNG}
+\end{center}
+\begin{align}
+\tag{1.24}
+p(x\in(a,b)) = \int_{a}^{b} p(x) dx
+\end{align}
+s.t
+\begin{align}
+\tag{1.25}
+p(x) \geqslant 0
+\end{align}
+\begin{align}
+\tag{1.26}
+\int_{-\infty}^{\infty} p(x) dx = 1
+\end{align}
+
+- probability density transforms (due to Jacobian factor)
+    - Jacobian factor: $J_{ki}\equiv {{\partial y_k}\over{\partial x_i}}$
+    - if $x=g(y)$, $f(x)=\tilde f (y)= f(g(y))$ $\to$ $p_y(y) \neq p_x(x)$ 
+    - *(ex.1.4)* the concept of the maximum of a probability density is dependent on the choice of variable.
+
+\begin{align}
+\tag{1.27}
+p_y(y)= {p_x(x)\left|{{d_x}\over{d_y}}\right|}={{d(p_x(g(y))|g'(y)|)}\over{dy}}
+\end{align}
+
+maximum value is calculated by $dp_y(y)/dy |_{\hat{y}} =0$
+
+\begin{align}
+{{dp_y(y)} \over{dy}} &= {{d(p_x(g(y))|g'(y)|)}\over{dy}} \\
+&= {{d(p_x(g(y)))}\over{dy}}|g'(y)|+ p_x(g(y)){{d|g'(y)|}\over{dy}} \\
+&={{dp_x(g(y))}\over{dg(y)}}{{dg(y)}\over{dy}}|g'(y)| + p_x(g(y)){{d|g'(y)|}\over{dy}}\\
+&={{dp_x(x)}\over{dx}}{{dg(y)}\over{dy}}|g'(y)| + p_x(g(y)){{d|g'(y)|}\over{dy}} = p_x(g(y)){{d|g'(y)|}\over{dy}}
+\end{align}
+
+If $p_x(x)=2x, x\in [0,1]$, the maximum value of variable $\hat x$ is 1. 
+And given that $x=sin(y)$, it transform to the $p_y(y)=2sin(y)|cos(y)| (=sin(2y)), y\in [0,\pi/2]$, and the $\hat y$ is $\pi/4$. $\therefore \hat{x} \neq sin(\hat{y})$
+
+
+- **cumulative discribution function**: the probability that x lies in the interval $(-\infty ,z)$
+- **probability mass function** : $p(x)$ when x is a discrete variable.
+\begin{align}
+\tag{1.28}
+P(z)=\int_{-\infty}^{z} p(x) dx
+\end{align}
+
+- The sum and product ruels, Bayes' therom of probability densities
+\begin{align}
+\tag{1.31}
+p(x)= \int p(x,y) dy
+\end{align}
+\begin{align}
+\tag{1.32}
+p(x,y)=p(y|x)p(x)
+\end{align}
+
+
+\newpage
+## 1.2.2 Expectations and covariabces
+
+- **expectation of $f(x)$**: weighted by the relative probabilities of the different values of $x$.
+\begin{align}
+\tag{1.33}
+\mathbb{E}[f]=\sum_x p(x)f(x) \ or \int p(x)f(x) dx
+\end{align}
+
+
+- if there is N of points, the expectation can be approximated as 
+\begin{align}
+\tag{1.35}
+\mathbb{E}[f]\simeq {1\over N} \sum_{n=1}^N f(x_n)
+\end{align}
+
+- **conditional expectiation**
+\begin{align}
+\tag{1.37}
+\mathbb{E}_x[f|y] = \sum_{x}p(x|y)f(x)
+\end{align}
+
+- **variance**: measurment of how much variability there is in $f(x)$ around its mean value $\mathbb{E}[f(x)]$.
+\begin{align*}
+\tag{1.38}
+var[f] &=\mathbb{E}[(f(x)-\mathbb{E}[f(x)])^2] \\
+&=\mathbb{E} [f(x)^2 - 2f(x)\mathbb{E} [f(x)]] + \mathbb{E}[f(x)]^2  \\
+&=\mathbb{E} [f(x)^2 - 2\mathbb{E}[f(x)\mathbb{E} [f(x)]]] + \mathbb{E}[f(x)]^2  \\
+&=\mathbb{E} [f(x)^2]  - 2\mathbb{E}[f(x)]^2 + \mathbb{E}[f(x)]^2
+\end{align*}
+\begin{align}
+\tag{1.39}
+var[f]=\mathbb{E}[(f(x)]^2-\mathbb{E}[f(x)]^2
+\end{align}
+
+- **covariance**: expresses the extent to which $x$ and $y$ vary together. (if $x$ and $y$ is independent, cov=0)
+\begin{align*}
+\tag{1.41}
+cov[x,y] &=\mathbb{E}_{x,y}[ \{ x-\mathbb{E}[x] \} \{y-\mathbb{E}[y]\}]  \\
+&=\mathbb{E}_{x,y} [xy-x\mathbb{E} [y] -y\mathbb{E}[x] +  \mathbb{E}[x]\mathbb{E}[y]] \\
+&=\mathbb{E}_{x,y} [xy]  - \mathbb{E}_{x,y}[x\mathbb{E}[y]]- \mathbb{E}_{x,y}[y\mathbb{E}[x]] +\mathbb{E}[x]\mathbb{E}[y] \\
+&=\mathbb{E}_{x,y} [xy]  - \mathbb{E}[x]\mathbb{E}[y]- \mathbb{E}[y]\mathbb{E}[x] +\mathbb{E}[x]\mathbb{E}[y]\\
+&=\mathbb{E}_{x,y} [xy]  -\mathbb{E}[x]\mathbb{E}[y]]
+\end{align*}
+
+(vector)
+\begin{align*}
+\tag{1.42}
+cov[\mathbf{x},\mathbf{y}] &=\mathbb{E}_{\mathbf{x},\mathbf{y}}[ \{ \mathbf{x}-\mathbb{E}[\mathbf{x}] \} \{\mathbf{y^T}-\mathbb{E}[\mathbf{y^T}]\}]  \\
+&=\mathbb{E}_{\mathbf{x},\mathbf{y}} [\mathbf{xy^T}]  -\mathbb{E}[\mathbf{x}]\mathbb{E}[\mathbf{y^T}]]
+\end{align*}
+
+
+
+\newpage
+## 1.2.3 Bayesian probabilities
+- **Purpose**: to address and quantify the uncertainty that surrounds the appropriate choice for the model parameters $\mathbf{w}$
+- **Bayes’ theorem**: at the uncertain event,
+    - (1) (prior probability) Suppose some opinion  based on exist knowldge
+    - (2) obtain fresh evidence 
+    - (3) (posterior probability) revise the uncertainty about (1)opinion
+    - that is,  to convert a prior probability into a posterior probability by incorporating the evidence provided by the observed data
+
+    
+\begin{align*}
+\tag{1.43}
+p(\mathbf{w}|\mathcal{D})={{p(\mathcal{D}|\mathbf{w})p(\mathbf{w})}\over{p(\mathcal{D})}}={{p(\mathcal{D}|\mathbf{w})p(\mathbf{w})}\over{\int p(\mathcal{D}|\mathbf{w})p(\mathbf w)}}
+\end{align*}
+    
+- $p(\mathbf{w})$: prior probability, assumptions about $\mathbf{w}$, before observing the data
+- $p(\mathcal{D}| \mathbf w), \mathcal{D}=\{ t_1, t_2,...,t_n\}$ : likelihood function,  how probable the
+observed data set is for different settings of the parameter vector $\mathbf w$
+- $p(\mathbf{w}|\mathcal D)$: posterior probability, to evaluate the uncertainty in w after observing D.
+- $p(\mathcal{D})$: normalization constant
+
+
+- **Frequentist paradigms**
+    - frequentist estimator $\to$ maximum likelihood (maximize $p(\mathbf{w}|\mathcal D)$)
+    - or minimize the *error* by the *error function*
+- **Bayesian view**:  provide a quantification of uncertainty using probabilities.
+    - Advantage: the inclusion of prior knowledge arises naturally
+    - Criticism: at the prior distribution is often selected on the basis of mathematical convenience rather than as a reflection of any prior beliefs 
+    - To reduce the dependence on the prior $\to$ noninformative priors 
+    - Limitation: for using Bayeesian, need to marginalize over the whole of parameter space (it is difficult!)
+
+
+
+\newpage
+## 1.2.4 The Gaussian distribution
+
+\begin{align*}
+\tag{1.46}
+\mathcal{N}(x|\mu, \sigma^2)={{1}\over{(2\pi \sigma^2)^{1/2}}}exp \{- {1\over{2\sigma^2}}(x-\mu)^2 \} 
+\end{align*}
+- precision: $1\over{\sigma^2}$
+
+- **vector form**
+\begin{align*}
+\tag{1.52}
+\mathcal{N}(\boldsymbol{x|\mu, \Sigma})={{{1}\over{(2\pi)^{D/2}}}{1\over{|\boldsymbol{\Sigma}|^{1/2}}}} exp \{- {1\over{2}}(\mathbf{x-\mu})^T\Sigma(\mathbf{x-\mu})\} 
+\end{align*}
+
+
+
+It is probability density
+
+(1) $\mathcal{N}(x|\mu, \sigma^2)>0$
+
+
+(2)
+
+\begin{align*}
+\tag{1.48}
+\int_{-\infty}^{\infty} \mathcal{N}(x|\mu, \sigma^2)= 1 
+\end{align*}
+
+
+
+*(ex.1.7)*
+\begin{align*}
+\int_{-\infty}^{\infty} exp \{ -{1\over{2\sigma^2}}(x-\mu)^2 \} dx &= \sqrt{2\pi \sigma^2}\\
+\int_{-\infty}^{\infty} exp \{ - \left( {{x-\mu}\over{\sqrt{2\sigma^2}}} \right)^2\} dx &= \sqrt{2\pi \sigma^2}\\
+\int_{-\infty}^{\infty}e^{-z^2}dz &= \sqrt{\pi} \mbox{  ,where } z= \left( {{x-\mu}\over{\sqrt{2\sigma^2}}} \right), dx=\sqrt{2\sigma^2 dz}\\
+\mbox{transform the spherical coordinate system}\\
+\int_{-\infty}^{\infty}e^{-x^2}dx\int_{-\infty}^{\infty}e^{-y^2}dy &= 
+\int\int_{-\infty}^{\infty}e^{-(x^2+y^2)}dxdy = \pi \\
+&= \int_{0}^{2\pi}\int_{0}^{\infty}e^{-r^2}rdrd\theta=\int_{0}^{2\pi}\int_{0}^{\infty}(-1/2)e^{u}dud\theta = \pi
+\end{align*}
+
+\newpage
+- **expectation**
+\begin{align*}
+\tag{1.49}
+\mathbb{E}[x]=\int_{-\infty}^{\infty} \mathcal{N}(x|\mu, \sigma^2)x dx= \mu 
+\end{align*}
+
+*(ex.1.8)*
+\begin{align*}
+\int_{-\infty}^{\infty} \mathcal{N}(x|\mu, \sigma^2)xdx &=\int_{-\infty}^{\infty} {{1}\over{(2\pi \sigma^2)^{1/2}}}exp \{- {1\over{2\sigma^2}}(x-\mu)^2 \}xdx \\
+&=\int_{-\infty}^{\infty} {{1}\over{(2\pi \sigma^2)^{1/2}}}exp \{- {1\over{2\sigma^2}}y^2\}(y+\mu)dy \mbox{   } (y=x-\mu) \\
+&= \mu \int_{-\infty}^{\infty} {{1}\over{(2\pi \sigma^2)^{1/2}}}exp \{- {1\over{2\sigma^2}}y^2\}dy+\int_{-\infty}^{\infty} {{1}\over{(2\pi \sigma^2)^{1/2}}}exp \{- {1\over{2\sigma^2}}y^2\}ydy \\
+&=\mu + 0 = \mu
+\end{align*}
+
+
+
+- **variance**
+\begin{align*}
+\tag{1.50}
+\mathbb{E}[x^2]=\int_{-\infty}^{\infty} \mathcal{N}(x|\mu, \sigma^2)x^2 dx= \mu^2+\sigma^2 
+\end{align*}
+\begin{align*}
+\tag{1.51}
+var[x]=\mathbb{E}[x^2]-\mathbb{E}[x]^2=\sigma^2 
+\end{align*}
+-  The maximum of a distribution is known as its mode. For a Gaussian, the mode = mean
+
+
+*(ex.1.8)*
+\begin{align*}
+Var[x] &= \int_{-\infty}^{\infty} (x-\mu)^2 \mathcal{N}(x|\mu, \sigma^2)xdx, f(x)=\mathcal{N}(x|\mu, \sigma^2) \\
+&=\int_{-\infty}^{\infty} x^2 f(x) - 2\mu x f(x) + \mu^2 f(x) dx \\
+&=\int_{-\infty}^{\infty} x^2 f(x) dx -2\mu \int_{-\infty}^{\infty} x f(x) dx + \mu^2 \int_{-\infty}^{\infty} f(x) dx \\
+&=\int_{-\infty}^{\infty} x^2 f(x) dx -2\mu\cdot \mu + \mu^2 \cdot 1\\
+&= \int_{-\infty}^{\infty} x^2 f(x) dx -\mu^2 =\mathbb{E}[x^2] -\mathbb{E}[x]^2 \\
+\therefore \mathbb{E}[x^2]=Var[x]+\mu^2=\sigma^2+\mu
+\end{align*}
+
+
+
+
+\newpage
+**Goal**:  determine $\mu, \sigma$ parameters from the data set
+
+- **maximize the (log) likelihood function**
+
+\begin{align}
+\tag{1.54}
+\ln p(\mathbf x|\mu, \sigma^2)= -{1\over {2\sigma^2}}\sum^N_{n=1}(x_n-\mu)^2-{1\over {2}} \ln \sigma^2 -{N\over{ 2}} \ln (2\pi)
+\end{align}
+
+- why log?
+    - (1) simplifies the subsequent mathematical analysis (2) good for underflow the numerical precision of the computer 
+    
+- **sample mean**: maximizint (1.54) whith respect to $\mu$
+\begin{align}
+\tag{1.55}
+\mu_{ML} = {1\over N}\sum^N_{n=1}x_n
+\end{align}
+
+
+*(ex.1.11)*
+\begin{align*}
+{\partial  \over {\partial  \mu}} (\sum_{n=1}^{N}(x_n-\mu)^2))=0\\
+{\partial  \over {\partial  \mu}} (\sum_{n=1}^{N}(x_n^2-2x_n\mu +\mu^2))=0\\
+\sum_{n=1}^N(-2x_n +2\mu) = 0\\
+\sum_{n=1}^{N}2x_n = 2N \mu \\
+\therefore \mu_{ML} = {1\over N}\sum^N_{n=1}x_n
+\end{align*}
+
+
+- **sample variance**: maximizint (1.54) whith respect to $\sigma^2$
+    - the solution ($\mu_{ML}$) and $\sigma^2_{ML}$is decopled. $\to$ calculation order does not matter
+    
+\begin{align}
+\tag{1.55}
+\sigma^2_{ML} = {1\over N}\sum^N_{n=1}(x_n-\mu_{ML})^2
+\end{align}
+
+*(ex.1.11)*
+\begin{align*}
+{\partial  \over {\partial  \sigma^2}} (-{1\over {2\sigma^2}}\sum^N_{n=1}(x_n-\mu)^2 -{N\over 2} \ln \sigma^2)=0 \\
+-{1\over 2}\sum^N_{n=1}(x_n-\mu)^2 -{N\over 2} \sigma^2=0\\
+\therefore \sigma^2_{ML} = {1\over N}\sum^N_{n=1}(x_n-\mu_{ML})^2
+\end{align*}
+
+
+- **Limit: bias problem**
+    - $\mu_{ML}$ is unbias, $\sigma^2_{ML}$ is bias
+    - at the variance, bias (underestimat) $\to$ over fitting 
+    - more complex models with many parameters $\to$ more bias $\to$ over fitting 
+
+\begin{align}
+\tag{1.57}
+\mathbb{E}[\mu_{ML}]=\mu
+\end{align}
+
+\begin{align}
+\tag{1.58}
+\mathbb{E}[\sigma^2_{ML}]= {{N-1}\over{N}}\sigma^2
+\end{align}
+
+\begin{align}
+\tag{1.59}
+\therefore \mbox{unbias variable : } \tilde \sigma^2= {{N}\over{N-1}}\sigma^2 = {1\over{N-1}}\sum_{n=1}^N (x_n-\mu_{ML})^2
+\end{align}
+
+\begin{center}
+\includegraphics{fig14.PNG}
+\end{center}
+
+
+
+
+\newpage
+## 1.2.5 Curve fitting re-visited
+
+**Goal**: to predictions for the target variable $t$ given some new value of the input variable $x$ on the basis of a set of training data comprising $N$ input values $x = (x_1,...,x_N )^T$ and their corresponding target values $t = (t_1,...,t_N )^T$ (from a probabilistic perspective)
+
+*assume that it is a Gaussian distribution*
+
+\begin{align}
+\tag{1.60}
+p(t|x,\mathbf{w},\beta)= \mathcal{N} (t|y(x,\mathbf{w}), \beta^{-1})
+\end{align}
+
+
+
+**Step 1**: usingthe training set $\{\mathbf{x, t} \} \to$ finding an unknown $\mathbf{w}$ & $\beta$  by maximum likelihood
+
+\begin{align}
+\tag{1.61}
+p(\mathbf t|\mathbf x,\mathbf{w},\beta)= \prod_{n=1}^N \mathcal{N} (t_n|y(x_n,\mathbf{w}), \beta^{-1})
+\end{align}
+
+\begin{align}
+\tag{1.62}
+\ln p(\mathbf t|\mathbf x,\mathbf{w},\beta)= -{\beta\over 2}\sum_{n=1}^N\{y(x_n,\mathbf{w})-t\}^2+ {N\over 2}\ln\beta - {N\over 2}\ln (2\pi)
+\end{align}
+
+- $\mathbf{w}_{ML}$: minimize ${\beta \over 2} \sum_{n=1}^N \{y(x_n,\mathbf{w})-t \}^2$ (=1.2)
+- $\beta_{ML}$: 
+\begin{align}
+\tag{1.62}
+{1\over \beta} = {1\over N}\sum^N_{n=1}\{y(x_n,\mathbf{w}_{ML})-t_n\}^2
+\end{align}
+
+- Having determined the parameters **w** and $\beta$ $\to$ predictive distribution that gives the probability distribution over $t$
+
+\begin{align}
+\tag{1.63}
+p(t|x,\mathbf{w}_{ML},\beta_{ML})= \mathcal{N} (t|y(x,\mathbf{w}_{ML}), \beta^{-1}_{ML})
+\end{align}
+
+**Step 2**: introduce a prior distribution for Bayesian approach
+
+- **prior**
+\begin{align}
+\tag{1.65}
+p(\mathbf{w},\alpha)= \mathcal{N} (\mathbf{w}|\mathbf{0},\alpha^{-1}\mathbf{I})=({\alpha\over{2\pi}})^{(M+1)/2}\exp\{ -{\alpha\over 2} \mathbf{w}^T\mathbf{w}\}
+\end{align}
+- $\alpha$: precision (hyperparameter), $M+1$:the total number of elements in the vector **w** for an $M_{th}$ order polynomial 
+- **posterior**
+\begin{align}
+\tag{1.66}
+p(\mathbf{\mathbf w}|\mathbf{x}, \mathbf t,\alpha,beta)= p(\mathbf{t}|\mathbf x , \mathbf w,\beta)p(\mathbf{w},\alpha)
+\end{align}
+- **MAP**: maximizing the posterior distribution, determine $w$ by finding the most probable value of $w$ given the data (a point estimate)
+\begin{align}
+\tag{1.67}
+\mbox{minimize  } {\beta \over 2} \sum^N_{n=1}\{y(x_n,\mathbf{w}_{ML})-t_n\}^2+{\alpha\over 2}\mathbf{w}^T\mathbf{w}
+\end{align}
+- It is same as (1.4) with a regularization parameter given by $\lambda = \alpha / \beta$.
+
+## 1.2.6 Bayesian curve fitting
+- Marginalizations of **w** $\to$ predict **w** as a distribution
+
+\begin{align}
+\tag{1.68}
+p(t|x,{\mathbf {x,t}})= \int p(t| x, \mathbf w)p(\mathbf{w}|\mathbf x, \mathbf t)d\mathbf w
+\end{align}
+
+- $p(t| x, \mathbf w)$: (1.60), $p(\mathbf{w}|\mathbf x, \mathbf t)$: posterior, normalizing the right-hand side of (1.66)
+
+\begin{align}
+\tag{1.69}
+p(t|x,{\mathbf {x,t}})=\mathcal{N} (t|m(x),s^2(x))
+\end{align}
+
+\begin{align}
+\tag{1.70}
+m(x) = \beta \phi (x)^T \mathbf{S}\sum^N_{n=1}\phi (x_n)t_n
+\end{align}
+\begin{align}
+\tag{1.70}
+s^2(x) = \beta^{-1} + \phi (x)^T \mathbf{S}\phi(x)
+\end{align}
+\begin{align}
+\tag{1.72}
+\mathbf{S}^{-1}=\alpha\mathbf{I}+\beta \sum_{n=1}^N \phi (x_n)\phi (x_n)^T
+\end{align}
+
+- $\beta^{-1}$: the uncertainty in the predicted value of $t$, $\phi (x)^T \mathbf{S}\phi(x)$: the uncertainty of **w** (a consequence
+of the Bayesian treatment)
+
+\begin{center}
+\includegraphics{fig12.PNG}
+\end{center}
+
+
+
+\newpage
+# 1.3 Model Selection
+- Select the number of free parameters (order)
+- In the maximum likelihood approach, the performance on the training set is not a good indicator of predictive performance on unseen data ($\because$ over-fitting)
+- $\therefore$ setting a validation set $\to$ select the one having the best predictive performance
+- However, the supply of data for training and testing will be limited $\to$ **cross validation**
+- **cross validation drawback**:
+    - larger the number of factor of S, more the training runs
+- **Information criteria**
+    - akaike information criterion, AIC: add panalty term which is number of adjustable parameters at the log likelihood
+    - Bayesian information criterion, BIC (Section 4.4.1)
+- **Information criteria limits**:
+    - not take account of the uncertainty in the model parameters
+    - tend to favour overly simple model
+    
+# 1.4 The Curse of Dimensionality
+- **The Curse of Dimensionality**: when the dimensionality increases, the volume of the space increases so fast that the available data become sparse
+
+*(example)*
+\begin{align}
+\tag{1.74}
+y(\mathbf x,\mathbf{w})=w_0+\sum_{i=1}^D w_ix_i + \sum_{i=1}^D \sum_{j=1}^D w_{ij}x_i x_j+  \sum_{i=1}^D \sum_{j=1}^D \sum_{k=1}^D w_{ijk}x_i x_j x_k
+\end{align}
+
+- As the number of input variables $D$ increases, so the number of independent coefficients  $\propto D^3$
+- For a polynomial of order M, the number of coefficients $\propto D^M$
+
+\newpage
+# 1.5 Decision Theory
+
+- When combined with probability theory, allows us to make optimal decisions in situations involving uncertainty
+- **Inference**:  Determination of $p(x, t)$ from a set of training data
+    - $p(x, t)$: complete summary of the uncertainty associated with these variables
+    - any of the quantities appearing in Bayes’ theorem can be obtained from the joint distribution $p(x, t)$ by either marginalizing or conditioning with respect to the appropriate variables
+
+\begin{align*}
+\tag{1.77}
+p(\mathcal{C}_k|\mathbf x)= {{p(\mathbf x | \mathcal{C}_k)p(\mathcal{C}_k)}\over{p(\mathbf x)}}
+\end{align*}
+
+## 1.5.1 Minimizaing the misclassification rate
+**Goal**: to make as few misclassifications as possible
+
+- Decision region: a rule - *assigns each value of x to one of the available classes*- will divide the input space into regions $\mathcal R_k$ for each class, such that all points in $\mathcal R_k$  are assigned to class $\mathcal C_k$
+- Decision boundary or decision surface: the boundaries between decision regions
+
+\begin{align*}
+\tag{1.79}
+\mbox{maximize  }p(correct) &= \sum_{k=1}^K p(\mathbf x \in \mathcal R_k, \mathcal C_k)\\
+&= \sum_{k=1}^K \int_{\mathcal R_k} p(\mathbf x ,\mathcal C_k)d\mathbf x
+\end{align*}
+
+\begin{center}
+\includegraphics{fig13.PNG}
+\end{center}
+- The optimal choice for $\hat x$ is where the curves for $p(x, C_1)$ and $p(x, C_2)$ cross, corresponding to $\hat x = x_0$, because in this case the red region disappears.
+
+
+\newpage
+## 1.5.2 Minimizing the expected loss
+
+
+- **cost function** or **loss function** : overall measure of loss incurred in taking any of the available decisions or actions, $L_{kj}p(\mathbf x,\mathcal C_k)$
+
+**Goal**:  to minimize the total loss incurred
+
+*(loss matrix)*
+\begin{center}
+\includegraphics{fig15.PNG}
+\end{center}
+
+- The loss function depends on the true class, which is unknown. 
+\begin{align*}
+\tag{1.80}
+\mbox{minimize  }\mathbb E [L] &= \sum_{k}\sum_{j} \int_{\mathcal R_j} L_{kj}p(\mathbf x,\mathcal C_k) d\mathbf x \\
+&= \sum_{k}\sum_{j} \int_{\mathcal R_j} L_{kj}p(\mathcal C_k|\mathbf x)p(\mathbf x) d\mathbf x 
+\end{align*}
+
+\begin{align*}
+\tag{1.81}
+\mbox{minimize  }\sum_{k} L_{kj}p(\mathcal C_k|\mathbf x)
+\end{align*}
+
+## 1.5.3 The reject option
+- somtimes $p(\mathcal C_k|\mathbf x)$ is too small (= joint distributions $p(x, C_k)$s are similar value)
+- In areas where it is difficult to make a decision, the reject option could be better
+
+\begin{center}
+\includegraphics{fig16.PNG}
+\end{center}
+
+\newpage
+## 1.5.4 Inference and decision
+
+- Decision problem process: inference stage (train the posterior) $\to$ decision stage *or* using discriminant function 
+- **(a) generative model**
+    - (1) solve theh inference problem, Determining the class-conditional densities $p(x | \mathcal C_k)$ for each class $\mathcal C_k$ individually
+    - (2) separately infer the prior class probabilities $p(C_k)$
+    - or model the joint distribution $p(x, C_k)$ directly and then normalize 
+    - (3) obtain the posterior probabilities
+    - Advantage: using $p(x) \to$ outlier detection or novelty detection
+    - Limit: excessively demanding of data, to find the joint distribution
+- **(b) discriminative model**
+    - obtain a posterior probability directly
+    - (1) solve the inference problem
+    - (2) using the decision theory 
+    - (3) to assign each new $\mathbf x$ to one of the classes
+- **(c) using discriminant function**
+    - discriminant function $\to$ directly assigning
+    - In this case, probabilities play no role
+- The reasons for the posterior probabilities
+    - Minimizing risk
+    - Reject option
+    - Compensating for class priors
+    - Combining models
+
+
+\newpage
+## 1.5.5 Loss functions for regression
+
+**Goal**: to choose $y(x)$ so as to minimize the average, or expected, loss $\mathbb E[L]$.
+
+\begin{align*}
+\tag{1.86}
+\mbox{minimize  }\mathbb E [L] &= \int\int L(t,y(\mathbf x)p(\mathbf x,t) d\mathbf x dt
+\end{align*}
+
+- A common loss function in regression problems: $L(t,y(\mathbf x))=\{y(\mathbf x)-t\}^2$
+
+- **Regression function**: the conditional average of $t$ conditioned on **x**
+    - The regression function $y(x)$, which minimizes the expected squared loss,is given by the mean of the conditional distribution $p(t|x)$.
+    
+
+\begin{align*}
+\tag{1.87}
+\mbox{minimize  }\mathbb E [L] &= \int\int \{y(\mathbf x-t)\}^2 p(\mathbf x,t) d\mathbf x dt
+\end{align*}
+\begin{align*}
+\tag{1.88}
+{{\delta \mathbb E [L]}\over{\delta y(\mathbf x) }} = 2 \int \{y(\mathbf x)-t\}p(\mathbf x,t)  dt
+\end{align*}
+
+*(appendix D)*
+
+\begin{align*}
+\int y(\mathbf x)p(\mathbf x,t)dt - \int t p(\mathbf x,t) dt=0 \\
+y(\mathbf x)p(\mathbf x) = \int t p(\mathbf x,t)dt \\
+y(x) = {{\int t p(\mathbf x,t)dt}\over{p(x)}} = {{\int t p(t|\mathbf x)p(x)dt}\over{p(x)}}
+\end{align*}
+\begin{align*}
+\tag{1.89}
+y(x) &= {{\int t p(\mathbf x,t)dt}\over{p(x)}} = \int t p(t|\mathbf x)dt = \mathbb E_t [t|\mathbf x]
+\end{align*}
+
+
+
+- slightly different way,
+\begin{align*}
+ \{y(\mathbf x)-t\}^2 &= \{y(\mathbf x)-\mathbb E [t|\mathbf x]+\mathbb E [t|\mathbf x]-t\}^2\\
+ &= \{y(\mathbf x)-\mathbb E [t|\mathbf x]\}^2+2\{y(\mathbf x)-\mathbb E [t|\mathbf x]\}\{\mathbb E [t|\mathbf x]-t\}+\{\mathbb E[t|\mathbf x]-t\}^2
+\end{align*}
+
+\begin{align*}
+\tag{1.90}
+\mathbb E[L]&= \int \{y(\mathbf x)-\mathbb E [t|\mathbf x]\}^2+2\{y(\mathbf x)-\mathbb E [t|\mathbf x]\}\{\mathbb E [t|\mathbf x]-t\}+\{\mathbb E[t|\mathbf x]-t\}^2 p(\mathbf x,t) dt\\
+&= \int \{y(\mathbf x)-\mathbb E [t|\mathbf x]\}^2 p(\mathbf x)d\mathbf x +\int \{\mathbb E [t|\mathbf x]-t\}^2p(\mathbf x)d \mathbf x = var[t|\mathbf x]p(\mathbf x)
+\end{align*}
+
+
+- second term
+    - the variance of the distribution of $t$, averaged over **x**
+    - the irreducible minimum value of the loss function, noise
+    
+- another loss function: Minkowski loss
+\begin{align*}
+\tag{1.91}
+\mathbb E [L_q] &= \int\int |y(\mathbf x)-t|^q p(\mathbf x,t) d\mathbf x dt
+\end{align*}
+
+\begin{center}
+\includegraphics{fig17.PNG}
+\end{center}
+
+
+
+\newpage
+# 1.6 Information Theory
+## 1.6.1 Relative entropy and mutual information
