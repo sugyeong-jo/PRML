@@ -30,9 +30,9 @@ Contents
 
 -   1.6.1 Relative entropy and mutual information
 
-1. Introduction
-===============
 
+1 Introduction
+========
 -   Training set:
     **{****x**<sub>**1**</sub>**,** **.****.****.****,** **x**<sub>**N**</sub>**}**,
     to tune the parameters of an adaptive model
